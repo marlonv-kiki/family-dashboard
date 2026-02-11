@@ -1,5 +1,4 @@
 console.log("VERSION 2 LIVE");
-console.log("Dashboard JS loaded");
 
 const CALENDAR_URLS = [
   "https://calendar.google.com/calendar/ical/marlonv%40gmail.com/private-9dfa077d3df5faaa16c06ebf026a20f7/basic.ics",
