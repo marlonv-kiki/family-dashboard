@@ -1,0 +1,41 @@
+@font-face {
+  font-family: "Atkinson";
+  src: url("fonts/AtkinsonHyperlegible-Regular.ttf");
+}
+
+@font-face {
+  font-family: "SourceSerif";
+  src: url("fonts/SourceSerif4-Regular.ttf");
+}
+
+body {
+  margin: 0;
+  background: #f7f7f7;
+  color: #111;
+  font-family: Atkinson, sans-serif;
+}
+
+#container {
+  padding: 48px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 42px;
+}
+
+main {
+  flex: 1;
+  margin-top: 40px;
+}
+
+footer {
+  font-family: SourceSerif, serif;
+  font-size: 28px;
+  margin-top: 32px;
+}
