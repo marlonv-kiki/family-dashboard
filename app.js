@@ -1,16 +1,10 @@
 console.log("Dashboard JS loaded");
 
-// =====================
-// CALENDAR URLS (YOURS)
-// =====================
 const CALENDAR_URLS = [
   "https://calendar.google.com/calendar/ical/marlonv%40gmail.com/private-9dfa077d3df5faaa16c06ebf026a20f7/basic.ics",
   "https://calendar.planningcenteronline.com/icals/eJxj4ajmsGLLz2RmM2ey4kotzi8oAQmUZjLzTLG34ihLTvZU4isoTcrJLM5ITWGzYnMNsWIvK_FUEgQLJseXZOamFrNZc4ZYcRckFiXmFlczAACsLhf725a297e40c67372ac835df92d81b42aa66141064"
 ];
 
-// =====================
-// ICS PARSER (simple)
-// =====================
 function parseICS(text) {
   const events = [];
   const lines = text.split(/\r?\n/);
@@ -32,57 +26,3 @@ function parseICS(text) {
         event.summary = line.split(":").slice(1).join(":");
       }
     }
-  }
-  return events;
-}
-
-function parseICSTime(line) {
-  const value = line.split(":")[1];
-  const year = value.slice(0, 4);
-  const month = value.slice(4, 6);
-  const day = value.slice(6, 8);
-  const hour = value.slice(9, 11) || "00";
-  const min = value.slice(11, 13) || "00";
-  return new Date(`${year}-${month}-${day}T${hour}:${min}:00`);
-}
-
-// =====================
-// LOAD CALENDARS
-// =====================
-async function loadCalendars() {
-  console.log("Loading calendars...");
-  const allEvents = [];
-
-  for (const url of CALENDAR_URLS) {
-    console.log("Fetching:", url);
-    const response = await fetch(url);
-    const text = await response.text();
-    const events = parseICS(text);
-    console.log("Events found:", events.length);
-    allEvents.push(...events);
-  }
-
-  const now = new Date();
-
-  const upcoming = allEvents
-    .filter(e => e.start >= now)
-    .sort((a, b) => a.start - b.start)
-    .slice(0, 6);
-
-  renderEvents(upcoming);
-}
-
-// =====================
-// DISPLAY EVENTS
-// =====================
-function renderEvents(events) {
-  const list = document.getElementById("events");
-  list.innerHTML = "";
-
-  if (events.length === 0) {
-    list.innerHTML = "<li>No upcoming events</li>";
-    return;
-  }
-
-  for (const event of events) {
-    const li = document.
