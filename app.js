@@ -1,3 +1,4 @@
+console.log("VERSION 2 LIVE");
 console.log("Dashboard JS loaded");
 
 const CALENDAR_URLS = [
