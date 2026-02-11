@@ -26,3 +26,63 @@ function parseICS(text) {
         event.summary = line.split(":").slice(1).join(":");
       }
     }
+  }
+
+  return events;
+}
+
+function parseICSTime(line) {
+  const value = line.split(":")[1];
+  const year = value.slice(0, 4);
+  const month = value.slice(4, 6);
+  const day = value.slice(6, 8);
+  const hour = value.slice(9, 11) || "00";
+  const min = value.slice(11, 13) || "00";
+  return new Date(`${year}-${month}-${day}T${hour}:${min}:00`);
+}
+
+async function loadCalendars() {
+  const allEvents = [];
+
+  for (const url of CALENDAR_URLS) {
+    const response = await fetch(url);
+    const text = await response.text();
+    const events = parseICS(text);
+    allEvents.push(...events);
+  }
+
+  const now = new Date();
+
+  const upcoming = allEvents
+    .filter(e => e.start >= now)
+    .sort((a, b) => a.start - b.start)
+    .slice(0, 6);
+
+  renderEvents(upcoming);
+}
+
+function renderEvents(events) {
+  const list = document.getElementById("events");
+  list.innerHTML = "";
+
+  if (events.length === 0) {
+    list.innerHTML = "<li>No upcoming events</li>";
+    return;
+  }
+
+  for (const event of events) {
+    const li = document.createElement("li");
+
+    const time = event.start.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+
+    li.textContent = `${time} — ${event.summary}`;
+    list.appendChild(li);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadCalendars();
+});
