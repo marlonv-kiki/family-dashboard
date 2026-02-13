@@ -1,7 +1,7 @@
 console.log("Dashboard JS loaded");
 
 const CALENDAR_URLS = [
-  "https://api.allorigins.win/raw?url=https://calendar.google.com/calendar/ical/marlonv%40gmail.com/private-9dfa077d3df5faaa16c06ebf026a20f7/basic.ics",
+  "https://calendar-proxy.marlonv.workers.dev?url=https://calendar.google.com/calendar/ical/marlonv%40gmail.com/private-9dfa077d3df5faaa16c06ebf026a20f7/basic.ics",
   "https://calendar.planningcenteronline.com/icals/eJxj4ajmsGLLz2RmM2ey4kotzi8oAQmUZjLzTLG34ihLTvZU4isoTcrJLM5ITWGzYnMNsWIvK_FUEgQLJseXZOamFrNZc4ZYcRckFiXmFlczAACsLhf725a297e40c67372ac835df92d81b42aa66141064"
 ];
 
