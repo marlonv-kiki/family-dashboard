@@ -86,3 +86,9 @@ function renderEvents(events) {
 document.addEventListener("DOMContentLoaded", () => {
   loadCalendars();
 });
+
+// Auto refresh every 5 minutes
+setInterval(() => {
+  loadCalendars();
+  loadWeather();
+}, 5 * 60 * 1000);
