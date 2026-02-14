@@ -36,25 +36,20 @@ async function loadWeather() {
     const data = await res.json();
     const current = data.current_weather;
 
-    document.getElementById("temperature").textContent =
-      `${Math.round(current.temperature)}°`;
+    const tempEl = document.getElementById("temperature");
+    tempEl.textContent = `${Math.round(current.temperature)}°`;
 
-    const icon = document.getElementById("weather-icon");
     const code = current.weathercode;
 
-    if (code === 0) {
-      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/clear-day.svg";
-    } else if ([1,2,3].includes(code)) {
-      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/partly-cloudy-day.svg";
-    } else if ([45,48].includes(code)) {
-      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/fog.svg";
-    } else if ([51,53,55,61,63,65,80,81,82].includes(code)) {
-      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/rain.svg";
-    } else if ([71,73,75,85,86].includes(code)) {
-      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/snow.svg";
-    } else {
-      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/cloudy.svg";
-    }
+    let emoji = "☁️";
+
+    if (code === 0) emoji = "☀️";
+    else if ([1,2,3].includes(code)) emoji = "⛅";
+    else if ([45,48].includes(code)) emoji = "🌫";
+    else if ([51,53,55,61,63,65,80,81,82].includes(code)) emoji = "🌧";
+    else if ([71,73,75,85,86].includes(code)) emoji = "❄️";
+
+    tempEl.prepend(emoji + " ");
 
   } catch (err) {
     console.error("Weather error:", err);
