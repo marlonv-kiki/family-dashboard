@@ -1,9 +1,69 @@
 console.log("Dashboard JS loaded");
 
+// ==============================
+// CONFIG
+// ==============================
+
 const CALENDAR_URLS = [
   "https://calendar-proxy.marlonv.workers.dev?type=calendar&url=https://calendar.google.com/calendar/ical/marlonv%40gmail.com/public/basic.ics",
   "https://calendar-proxy.marlonv.workers.dev?type=calendar&url=https://calendar.planningcenteronline.com/icals/eJxj4ajmsGLLz2RmM2ey4kotzi8oAQmUZjLzTLG34ihLTvZU4isoTcrJLM5ITWGzYnMNsWIvK_FUEgQLJseXZOamFrNZc4ZYcRckFiXmFlczAACsLhf725a297e40c67372ac835df92d81b42aa66141064"
 ];
+
+// ==============================
+// DATE DISPLAY
+// ==============================
+
+function updateDate() {
+  const now = new Date();
+  document.getElementById("date").textContent =
+    now.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric"
+    });
+}
+
+// ==============================
+// WEATHER
+// ==============================
+
+async function loadWeather() {
+  try {
+    const res = await fetch(
+      "https://calendar-proxy.marlonv.workers.dev?type=weather"
+    );
+
+    const data = await res.json();
+    const current = data.current_weather;
+
+    document.getElementById("temperature").textContent =
+      `${Math.round(current.temperature)}°`;
+
+    const icon = document.getElementById("weather-icon");
+    const code = current.weathercode;
+
+    if (code === 0) {
+      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/clear-day.svg";
+    } else if ([1,2,3].includes(code)) {
+      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/partly-cloudy-day.svg";
+    } else if ([45,48].includes(code)) {
+      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/fog.svg";
+    } else if ([51,53,55,61,63,65,80,81,82].includes(code)) {
+      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/rain.svg";
+    } else if ([71,73,75,85,86].includes(code)) {
+      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/snow.svg";
+    } else {
+      icon.src = "https://cdn.jsdelivr.net/gh/basmilius/weather-icons/production/fill/svg/cloudy.svg";
+    }
+
+  } catch (err) {
+    console.error("Weather error:", err);
+  }
+}
+
+// ==============================
+// CALENDAR
+// ==============================
 
 function parseICS(text) {
   const events = [];
@@ -32,21 +92,22 @@ function parseICS(text) {
 }
 
 function parseICSTime(line) {
-  const value = line.split(":")[1];
-  const year = value.slice(0, 4);
-  const month = value.slice(4, 6);
-  const day = value.slice(6, 8);
-  const hour = value.slice(9, 11) || "00";
-  const min = value.slice(11, 13) || "00";
-  return new Date(`${year}-${month}-${day}T${hour}:${min}:00`);
+  const dateStr = line.split(":")[1];
+  return new Date(
+    dateStr.substring(0, 4),
+    dateStr.substring(4, 6) - 1,
+    dateStr.substring(6, 8),
+    dateStr.substring(9, 11),
+    dateStr.substring(11, 13)
+  );
 }
 
 async function loadCalendars() {
   const allEvents = [];
 
-  for (const url of CALENDAR_URLS) {
-    const response = await fetch(url);
-    const text = await response.text();
+  for (let url of CALENDAR_URLS) {
+    const res = await fetch(url);
+    const text = await res.text();
     const events = parseICS(text);
     allEvents.push(...events);
   }
@@ -56,39 +117,30 @@ async function loadCalendars() {
   const upcoming = allEvents
     .filter(e => e.start >= now)
     .sort((a, b) => a.start - b.start)
-    .slice(0, 6);
+    .slice(0, 10);
 
-  renderEvents(upcoming);
-}
-
-function renderEvents(events) {
   const list = document.getElementById("events");
   list.innerHTML = "";
 
-  if (events.length === 0) {
-    list.innerHTML = "<li>No upcoming events</li>";
-    return;
-  }
-
-  for (const event of events) {
+  upcoming.forEach(event => {
     const li = document.createElement("li");
-
-    const time = event.start.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit"
-    });
-
-    li.textContent = `${time} — ${event.summary}`;
+    li.textContent =
+      `${event.start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} — ${event.summary}`;
     list.appendChild(li);
-  }
+  });
 }
 
+// ==============================
+// INIT
+// ==============================
+
 document.addEventListener("DOMContentLoaded", () => {
+  updateDate();
+  loadWeather();
   loadCalendars();
 });
 
 // Auto refresh every 5 minutes
 setInterval(() => {
-  loadCalendars();
-  loadWeather();
-}, 5 * 60 * 1000);
+  location.reload();
+}, 300000);
