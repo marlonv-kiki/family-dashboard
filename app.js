@@ -1,68 +1,69 @@
 console.log("Dashboard JS loaded");
 
-// ==========================
-// CONFIG
-// ==========================
+// 🔹 USE YOUR PUBLIC GOOGLE CALENDAR LINK HERE
+const CALENDAR_URL =
+  "https://calendar-proxy.marlonv.workers.dev?type=calendar&url=https://calendar.google.com/calendar/ical/marlonv%40gmail.com/public/basic.ics";
 
-const CALENDAR_URLS = [
-  "https://calendar-proxy.marlonv.workers.dev?type=calendar&url=https://calendar.google.com/calendar/ical/marlonv%40gmail.com/public/basic.ics",
-  "https://calendar-proxy.marlonv.workers.dev?type=calendar&url=https://calendar.planningcenteronline.com/icals/eJxj4ajmsGLLz2RmM2ey4kotzi8oAQmUZjLzTLG34ihLTvZU4isoTcrJLM5ITWGzYnMNsWIvK_FUEgQLJseXZOamFrNZc4ZYcRckFiXmFlczAACsLhf725a297e40c67372ac835df92d81b42aa66141064"
-];
-
+// 🔹 WEATHER (Hartwell, GA)
 const WEATHER_URL =
   "https://calendar-proxy.marlonv.workers.dev?type=weather";
 
-// ==========================
+// ----------------------------
 // DATE
-// ==========================
-
+// ----------------------------
 function loadDate() {
-  const today = new Date();
+  const dateEl = document.getElementById("date");
+  const now = new Date();
+
   const options = { weekday: "long", month: "long", day: "numeric" };
-  document.getElementById("date").textContent =
-    today.toLocaleDateString("en-US", options);
+  dateEl.textContent = now.toLocaleDateString("en-US", options);
 }
 
-// ==========================
+// ----------------------------
 // WEATHER
-// ==========================
-
+// ----------------------------
 async function loadWeather() {
   try {
     const res = await fetch(WEATHER_URL);
     const data = await res.json();
 
     const temp = Math.round(data.current_weather.temperature);
-
-    document.getElementById("temperature").textContent = temp + "°";
-
-    // Simple weather emoji
     const code = data.current_weather.weathercode;
-    const icon = document.getElementById("weather-icon");
 
-    if (code < 3) icon.src = "https://cdn-icons-png.flaticon.com/512/869/869869.png"; // sunny
-    else if (code < 50) icon.src = "https://cdn-icons-png.flaticon.com/512/1163/1163624.png"; // cloudy
-    else icon.src = "https://cdn-icons-png.flaticon.com/512/414/414927.png"; // rain
+    const tempEl = document.getElementById("temperature");
+    const iconEl = document.getElementById("weather-icon");
 
+    if (tempEl) tempEl.textContent = temp + "°";
+
+    if (iconEl) {
+      if (code < 3) {
+        iconEl.src =
+          "https://cdn-icons-png.flaticon.com/512/869/869869.png"; // sun
+      } else if (code < 50) {
+        iconEl.src =
+          "https://cdn-icons-png.flaticon.com/512/1163/1163624.png"; // cloud
+      } else {
+        iconEl.src =
+          "https://cdn-icons-png.flaticon.com/512/414/414927.png"; // rain
+      }
+    }
   } catch (err) {
     console.error("Weather error:", err);
   }
 }
 
-// ==========================
-// ICS PARSER
-// ==========================
-
+// ----------------------------
+// PARSE ICS
+// ----------------------------
 function parseICS(text) {
   const events = [];
   const lines = text.split(/\r?\n/);
-
   let event = null;
 
   for (let line of lines) {
-    if (line.startsWith("BEGIN:VEVENT")) {
+    if (line === "BEGIN:VEVENT") {
       event = {};
-    } else if (line.startsWith("END:VEVENT")) {
+    } else if (line === "END:VEVENT") {
       if (event.start && event.summary) {
         events.push(event);
       }
@@ -71,7 +72,6 @@ function parseICS(text) {
       if (line.startsWith("DTSTART")) {
         event.start = parseICSTime(line);
       }
-
       if (line.startsWith("SUMMARY")) {
         event.summary = line.split(":").slice(1).join(":");
       }
@@ -93,64 +93,53 @@ function parseICSTime(line) {
   return new Date(`${year}-${month}-${day}T${hour}:${min}:00`);
 }
 
-// ==========================
-// LOAD CALENDARS
-// ==========================
+// ----------------------------
+// LOAD CALENDAR
+// ----------------------------
+async function loadCalendar() {
+  try {
+    const res = await fetch(CALENDAR_URL);
+    const text = await res.text();
+    const events = parseICS(text);
 
-async function loadCalendars() {
-  const today = new Date();
-  const todayString = today.toISOString().slice(0, 10);
+    const today = new Date();
+    const todayString = today.toDateString();
 
-  let allEvents = [];
+    const todayEvents = events.filter(
+      (e) => e.start.toDateString() === todayString
+    );
 
-  for (let url of CALENDAR_URLS) {
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-      const events = parseICS(text);
-      allEvents = allEvents.concat(events);
-    } catch (err) {
-      console.error("Calendar fetch error:", err);
+    todayEvents.sort((a, b) => a.start - b.start);
+
+    const list = document.getElementById("events");
+    list.innerHTML = "";
+
+    if (todayEvents.length === 0) {
+      list.innerHTML = "<li>No events today</li>";
+      return;
     }
-  }
 
-  // Filter to today only
-  const todayEvents = allEvents.filter(event => {
-    return event.start.toISOString().slice(0, 10) === todayString;
-  });
+    for (let event of todayEvents) {
+      const li = document.createElement("li");
 
-  // Sort by time
-  todayEvents.sort((a, b) => a.start - b.start);
+      const time = event.start.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+      });
 
-  const list = document.getElementById("events");
-  list.innerHTML = "";
-
-  if (todayEvents.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "No events today.";
-    list.appendChild(li);
-    return;
-  }
-
-  for (let event of todayEvents) {
-    const li = document.createElement("li");
-
-    const time = event.start.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit"
-    });
-
-    li.textContent = `${time} — ${event.summary}`;
-    list.appendChild(li);
+      li.textContent = `${time} — ${event.summary}`;
+      list.appendChild(li);
+    }
+  } catch (err) {
+    console.error("Calendar error:", err);
   }
 }
 
-// ==========================
-// INIT
-// ==========================
-
+// ----------------------------
+// START EVERYTHING
+// ----------------------------
 document.addEventListener("DOMContentLoaded", () => {
   loadDate();
   loadWeather();
-  loadCalendars();
+  loadCalendar();
 });
